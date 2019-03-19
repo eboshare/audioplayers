@@ -11,8 +11,12 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class WrappedMediaPlayer extends Player implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompletionListener {
+    private static final Logger LOGGER = Logger.getLogger(WrappedMediaPlayer.class.getCanonicalName());
+
     private Context context;
     private String playerId;
 
@@ -230,13 +234,14 @@ public class WrappedMediaPlayer extends Player implements MediaPlayer.OnPrepared
     private void setSource(String url, HashMap<String, Object> headers) {
         try {
             try {
+                LOGGER.log(Level.SEVERE, headers == null ? "null" : headers.toString());
                 if (headers == null || headers.isEmpty()) {
+                    this.player.setDataSource(url);
+                } else {
                     final Uri uri = Uri.parse(url);
 
                     final Method method = this.player.getClass().getMethod("setDataSource", Context.class, Uri.class, Map.class);
                     method.invoke(this.player, this.context, uri, headers);
-                } else {
-                    this.player.setDataSource(url);
                 }
             } catch (Exception e) {
                 this.player.setDataSource(url);
