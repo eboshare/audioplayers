@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
+import java.util.HashMap;
 
 import static java.io.File.createTempFile;
 
@@ -82,7 +83,7 @@ public class WrappedSoundPool extends Player implements SoundPool.OnLoadComplete
     }
 
     @Override
-    void setUrl(final String url, final boolean isLocal) {
+    void setUrl(final String url, final boolean isLocal, final HashMap<String, Object> headers) {
         if (this.url != null && this.url.equals(url)) {
             return;
         }
