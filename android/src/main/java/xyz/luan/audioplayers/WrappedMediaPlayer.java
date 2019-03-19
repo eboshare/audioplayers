@@ -1,17 +1,23 @@
 package xyz.luan.audioplayers;
 
+import android.content.Context;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Build;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
 
 public class WrappedMediaPlayer extends Player implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompletionListener {
-
+    private Context context;
     private String playerId;
 
     private String url;
+    private HashMap<String, Object> headers;
     private double volume = 1.0;
     private boolean respectSilence;
     private ReleaseMode releaseMode = ReleaseMode.RELEASE;
@@ -25,9 +31,10 @@ public class WrappedMediaPlayer extends Player implements MediaPlayer.OnPrepared
     private MediaPlayer player;
     private AudioplayersPlugin ref;
 
-    WrappedMediaPlayer(AudioplayersPlugin ref, String playerId) {
+    WrappedMediaPlayer(AudioplayersPlugin ref, String playerId, Context context) {
         this.ref = ref;
         this.playerId = playerId;
+        this.context = context;
     }
 
     /**
@@ -35,9 +42,10 @@ public class WrappedMediaPlayer extends Player implements MediaPlayer.OnPrepared
      */
 
     @Override
-    void setUrl(String url, boolean isLocal) {
+    void setUrl(String url, boolean isLocal, HashMap<String, Object> headers) {
         if (!objectEquals(this.url, url)) {
             this.url = url;
+            this.headers = headers;
             if (this.released) {
                 this.player = createPlayer();
                 this.released = false;
@@ -46,7 +54,7 @@ public class WrappedMediaPlayer extends Player implements MediaPlayer.OnPrepared
                 this.prepared = false;
             }
 
-            this.setSource(url);
+            this.setSource(url, headers);
             this.player.setVolume((float) volume, (float) volume);
             this.player.setLooping(this.releaseMode == ReleaseMode.LOOP);
             this.player.prepareAsync();
@@ -118,7 +126,7 @@ public class WrappedMediaPlayer extends Player implements MediaPlayer.OnPrepared
             if (this.released) {
                 this.released = false;
                 this.player = createPlayer();
-                this.setSource(url);
+                this.setSource(url, headers);
                 this.player.prepareAsync();
             } else if (this.prepared) {
                 this.player.start();
@@ -219,9 +227,20 @@ public class WrappedMediaPlayer extends Player implements MediaPlayer.OnPrepared
         return player;
     }
 
-    private void setSource(String url) {
+    private void setSource(String url, HashMap<String, Object> headers) {
         try {
-            this.player.setDataSource(url);
+            try {
+                if (headers == null || headers.isEmpty()) {
+                    final Uri uri = Uri.parse(url);
+
+                    final Method method = this.player.getClass().getMethod("setDataSource", Context.class, Uri.class, Map.class);
+                    method.invoke(this.player, this.context, uri, headers);
+                } else {
+                    this.player.setDataSource(url);
+                }
+            } catch (Exception e) {
+                this.player.setDataSource(url);
+            }
         } catch (IOException ex) {
             throw new RuntimeException("Unable to access resource", ex);
         }

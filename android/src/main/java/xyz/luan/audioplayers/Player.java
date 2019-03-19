@@ -1,5 +1,7 @@
 package xyz.luan.audioplayers;
 
+import java.util.HashMap;
+
 abstract class Player {
 
     protected static boolean objectEquals(Object o1, Object o2) {
@@ -16,7 +18,7 @@ abstract class Player {
 
     abstract void pause();
 
-    abstract void setUrl(String url, boolean isLocal);
+    abstract void setUrl(String url, boolean isLocal, HashMap<String, Object> headers);
 
     abstract void setVolume(double volume);
 

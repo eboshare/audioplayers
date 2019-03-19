@@ -1,5 +1,6 @@
 package xyz.luan.audioplayers;
 
+import android.content.Context;
 import android.os.Handler;
 
 import java.lang.ref.WeakReference;
@@ -22,14 +23,18 @@ public class AudioplayersPlugin implements MethodCallHandler {
     private final Handler handler = new Handler();
     private Runnable positionUpdates;
 
+    private Context context;
+
     public static void registerWith(final Registrar registrar) {
         final MethodChannel channel = new MethodChannel(registrar.messenger(), "xyz.luan/audioplayers");
-        channel.setMethodCallHandler(new AudioplayersPlugin(channel));
+        channel.setMethodCallHandler(new AudioplayersPlugin(channel, registrar.context()));
     }
 
-    private AudioplayersPlugin(final MethodChannel channel) {
+    private AudioplayersPlugin(final MethodChannel channel, final Context context) {
         this.channel = channel;
         this.channel.setMethodCallHandler(this);
+
+        this.context = context;
     }
 
     @Override
@@ -53,9 +58,10 @@ public class AudioplayersPlugin implements MethodCallHandler {
                 final Integer position = call.argument("position");
                 final boolean respectSilence = call.argument("respectSilence");
                 final boolean isLocal = call.argument("isLocal");
+                final HashMap<String, Object> headers = call.argument("headers");
                 player.configAttributes(respectSilence);
                 player.setVolume(volume);
-                player.setUrl(url, isLocal);
+                player.setUrl(url, isLocal, headers);
                 if (position != null && !mode.equals("PlayerMode.LOW_LATENCY")) {
                     player.seek(position);
                 }
@@ -91,7 +97,8 @@ public class AudioplayersPlugin implements MethodCallHandler {
             case "setUrl": {
                 final String url = call.argument("url");
                 final boolean isLocal = call.argument("isLocal");
-                player.setUrl(url, isLocal);
+                final HashMap<String, Object> headers = call.argument("headers");
+                player.setUrl(url, isLocal, headers);
                 break;
             }
             case "setReleaseMode": {
@@ -112,7 +119,7 @@ public class AudioplayersPlugin implements MethodCallHandler {
         if (!mediaPlayers.containsKey(playerId)) {
             Player player =
                     mode.equalsIgnoreCase("PlayerMode.MEDIA_PLAYER") ?
-                            new WrappedMediaPlayer(this, playerId) :
+                            new WrappedMediaPlayer(this, playerId, this.context) :
                             new WrappedSoundPool(this, playerId);
             mediaPlayers.put(playerId, player);
         }

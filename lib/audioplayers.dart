@@ -154,13 +154,17 @@ class AudioPlayer {
   /// Play audio. Url can be a remote url (isLocal = false) or a local file system path (isLocal = true).
   Future<int> play(
     String url, {
+    Map<String, dynamic> headers,
     bool isLocal: false,
     double volume: 1.0,
     Duration position: null, // Must be null by default to be compatible with radio streams
     bool respectSilence: false,
   }) async {
+    headers = headers ?? Map<String, dynamic>();
+
     final int positionInMilliseconds = position == null ? null : position.inMilliseconds;
     int result = await _invokeMethod('play', {
+      'headers': headers,
       'url': url,
       'isLocal': isLocal,
       'volume': volume,
