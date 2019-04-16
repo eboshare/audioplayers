@@ -86,17 +86,17 @@ class _PlayerWidgetState extends State<PlayerWidget> {
           ],
         ),
         new Row(
-          // mainAxisSize: MainAxisSize.min,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            new Flexible(
-              // padding: new EdgeInsets.all(12.0),
+            new Padding(
+              padding: new EdgeInsets.all(12.0),
               child: new Stack(
                 children: [
-                  new LinearProgressIndicator(
+                  new CircularProgressIndicator(
                     value: 1.0,
                     valueColor: new AlwaysStoppedAnimation(Colors.grey[300]),
                   ),
-                  new LinearProgressIndicator(
+                  new CircularProgressIndicator(
                     value: (_position != null
                         && _duration != null
                         && _position.inMilliseconds > 0
